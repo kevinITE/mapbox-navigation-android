@@ -13,6 +13,7 @@ import com.mapbox.services.android.navigation.ui.v5.listeners.InstructionListLis
 import com.mapbox.services.android.navigation.ui.v5.listeners.NavigationListener;
 import com.mapbox.services.android.navigation.ui.v5.listeners.RouteListener;
 import com.mapbox.services.android.navigation.ui.v5.listeners.SpeechAnnouncementListener;
+import com.mapbox.services.android.navigation.ui.v5.listeners.TunnelListener;
 import com.mapbox.services.android.navigation.ui.v5.voice.SpeechPlayer;
 import com.mapbox.services.android.navigation.v5.milestone.Milestone;
 import com.mapbox.services.android.navigation.v5.milestone.MilestoneEventListener;
@@ -62,6 +63,9 @@ public abstract class NavigationViewOptions extends NavigationUiOptions {
   @Nullable
   public abstract LocationEngine locationEngine();
 
+  @Nullable
+  public abstract TunnelListener tunnelListener();
+
   @AutoValue.Builder
   public abstract static class Builder {
 
@@ -102,6 +106,8 @@ public abstract class NavigationViewOptions extends NavigationUiOptions {
     public abstract Builder speechPlayer(SpeechPlayer speechPlayer);
 
     public abstract Builder locationEngine(LocationEngine locationEngine);
+
+    public abstract Builder tunnelListener(TunnelListener tunnelListener);
 
     public abstract NavigationViewOptions build();
   }

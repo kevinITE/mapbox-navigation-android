@@ -63,8 +63,8 @@ public class RerouteActivity extends AppCompatActivity implements OnMapReadyCall
   @BindView(R.id.instructionView)
   InstructionView instructionView;
 
-  private Point origin = Point.fromLngLat(-87.6900, 41.8529);
-  private Point destination = Point.fromLngLat(-87.8921, 41.9794);
+  private Point origin = Point.fromLngLat(-0.358764,39.494876);
+  private Point destination = Point.fromLngLat(-0.383524, 39.497825);
   private Polyline polyline;
 
   private LocationLayerPlugin locationLayerPlugin;
@@ -73,6 +73,7 @@ public class RerouteActivity extends AppCompatActivity implements OnMapReadyCall
   private MapboxMap mapboxMap;
   private boolean running;
   private boolean tracking;
+  private boolean isInTunnel = false;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -214,6 +215,15 @@ public class RerouteActivity extends AppCompatActivity implements OnMapReadyCall
 
   @Override
   public void onProgressChange(Location location, RouteProgress routeProgress) {
+    boolean inTunnel = routeProgress.inTunnel();
+    if (!isInTunnel && inTunnel) {
+      isInTunnel = true;
+      Snackbar.make(contentLayout, "Enter tunnel!", Snackbar.LENGTH_SHORT).show();
+    }
+    if (isInTunnel && !inTunnel) {
+      isInTunnel = false;
+      Snackbar.make(contentLayout, "Exit tunnel!", Snackbar.LENGTH_SHORT).show();
+    }
     if (tracking) {
       locationLayerPlugin.forceLocationUpdate(location);
       CameraPosition cameraPosition = new CameraPosition.Builder()
@@ -252,7 +262,7 @@ public class RerouteActivity extends AppCompatActivity implements OnMapReadyCall
 
   @Override
   public void onFailure(Call<DirectionsResponse> call, Throwable throwable) {
-    Timber.e("Getting directions failed: ", throwable);
+    Timber.e(throwable);
   }
 
   private void getRoute(Point origin, Point destination, Float bearing) {

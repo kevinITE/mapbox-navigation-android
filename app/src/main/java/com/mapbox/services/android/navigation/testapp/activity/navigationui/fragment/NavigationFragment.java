@@ -1,10 +1,14 @@
 package com.mapbox.services.android.navigation.testapp.activity.navigationui.fragment;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatDelegate;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,17 +23,19 @@ import com.mapbox.services.android.navigation.ui.v5.NavigationView;
 import com.mapbox.services.android.navigation.ui.v5.NavigationViewOptions;
 import com.mapbox.services.android.navigation.ui.v5.OnNavigationReadyCallback;
 import com.mapbox.services.android.navigation.ui.v5.listeners.NavigationListener;
+import com.mapbox.services.android.navigation.ui.v5.listeners.TunnelListener;
 import com.mapbox.services.android.navigation.v5.navigation.NavigationRoute;
 
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class NavigationFragment extends Fragment implements OnNavigationReadyCallback, NavigationListener {
+public class NavigationFragment extends Fragment implements OnNavigationReadyCallback, NavigationListener,
+  TunnelListener {
 
-  private static final double ORIGIN_LONGITUDE = -77.04012393951416;
-  private static final double ORIGIN_LATITUDE = 38.9111117447887;
-  private static final double DESTINATION_LONGITUDE = -77.03847169876099;
-  private static final double DESTINATION_LATITUDE = 38.91113678979344;
+  private static final double ORIGIN_LONGITUDE = -3.714873;
+  private static final double ORIGIN_LATITUDE = 40.397389;
+  private static final double DESTINATION_LONGITUDE = -3.712331;
+  private static final double DESTINATION_LATITUDE = 40.401686;
 
   private NavigationView navigationView;
   private DirectionsRoute directionsRoute;
@@ -44,6 +50,11 @@ public class NavigationFragment extends Fragment implements OnNavigationReadyCal
   @Override
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
+    if (wasNavigationStopped()) {
+      updateWasNavigationStopped(false);
+      AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO);
+      getActivity().recreate();
+    }
     navigationView = view.findViewById(R.id.navigation_view_fragment);
     navigationView.onCreate(savedInstanceState);
     navigationView.initialize(this);
@@ -122,6 +133,22 @@ public class NavigationFragment extends Fragment implements OnNavigationReadyCal
     // no-op
   }
 
+  @Override
+  public void onTunnel(boolean isInTunnel) {
+    boolean wasInTunnel = wasInTunnel();
+    if (isInTunnel) {
+      if (!wasInTunnel) {
+        updateWasInTunnel(true);
+        updateCurrentNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+      }
+    } else {
+      if (wasInTunnel) {
+        updateWasInTunnel(false);
+        updateCurrentNightMode(AppCompatDelegate.MODE_NIGHT_AUTO);
+      }
+    }
+  }
+
   private void fetchRoute(Point origin, Point destination) {
     NavigationRoute.builder(getContext())
       .accessToken(Mapbox.getAccessToken())
@@ -145,6 +172,7 @@ public class NavigationFragment extends Fragment implements OnNavigationReadyCal
       .directionsRoute(directionsRoute)
       .shouldSimulateRoute(true)
       .navigationListener(NavigationFragment.this)
+      .tunnelListener(this)
       .build();
     navigationView.startNavigation(options);
   }
@@ -155,6 +183,41 @@ public class NavigationFragment extends Fragment implements OnNavigationReadyCal
       FragmentNavigationActivity fragmentNavigationActivity = (FragmentNavigationActivity) activity;
       fragmentNavigationActivity.showPlaceholderFragment();
       fragmentNavigationActivity.showNavigationFab();
+      updateWasNavigationStopped(true);
+      updateWasInTunnel(false);
     }
+  }
+
+  private boolean wasInTunnel() {
+    Context context = getActivity();
+    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+    return preferences.getBoolean(context.getString(R.string.was_in_tunnel), false);
+  }
+
+  private void updateWasInTunnel(boolean wasInTunnel) {
+    Context context = getActivity();
+    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+    SharedPreferences.Editor editor = preferences.edit();
+    editor.putBoolean(context.getString(R.string.was_in_tunnel), wasInTunnel);
+    editor.apply();
+  }
+
+  private void updateCurrentNightMode(int nightMode) {
+    AppCompatDelegate.setDefaultNightMode(nightMode);
+    getActivity().recreate();
+  }
+
+  private boolean wasNavigationStopped() {
+    Context context = getActivity();
+    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+    return preferences.getBoolean(getString(R.string.was_navigation_stopped), false);
+  }
+
+  public void updateWasNavigationStopped(boolean wasNavigationStopped) {
+    Context context = getActivity();
+    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+    SharedPreferences.Editor editor = preferences.edit();
+    editor.putBoolean(getString(R.string.was_navigation_stopped), wasNavigationStopped);
+    editor.apply();
   }
 }

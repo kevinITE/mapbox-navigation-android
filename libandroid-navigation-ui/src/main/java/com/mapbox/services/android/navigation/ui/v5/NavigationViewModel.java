@@ -82,6 +82,7 @@ public class NavigationViewModel extends AndroidViewModel {
   private int timeFormatType;
   private boolean isRunning;
   private boolean isChangingConfigurations;
+  private boolean isInTunnel = false;
 
   public NavigationViewModel(Application application) {
     super(application);
@@ -106,6 +107,7 @@ public class NavigationViewModel extends AndroidViewModel {
       deactivateInstructionPlayer();
       endNavigation();
       isRunning = false;
+      isInTunnel = false;
     }
     clearDynamicCameraMap();
     navigationViewEventDispatcher = null;
@@ -300,6 +302,11 @@ public class NavigationViewModel extends AndroidViewModel {
       instructionModel.setValue(new InstructionModel(distanceFormatter, routeProgress));
       summaryModel.setValue(new SummaryModel(getApplication(), distanceFormatter, routeProgress, timeFormatType));
       navigationLocation.setValue(location);
+      boolean isCurrentlyInTunnel = routeProgress.inTunnel();
+      if (isInTunnel != isCurrentlyInTunnel) {
+        isInTunnel = isCurrentlyInTunnel;
+        navigationViewEventDispatcher.onTunnel(isInTunnel);
+      }
     }
   };
 

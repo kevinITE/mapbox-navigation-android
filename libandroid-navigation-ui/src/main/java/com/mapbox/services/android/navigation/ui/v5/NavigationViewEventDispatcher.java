@@ -15,6 +15,7 @@ import com.mapbox.services.android.navigation.ui.v5.listeners.InstructionListLis
 import com.mapbox.services.android.navigation.ui.v5.listeners.NavigationListener;
 import com.mapbox.services.android.navigation.ui.v5.listeners.RouteListener;
 import com.mapbox.services.android.navigation.ui.v5.listeners.SpeechAnnouncementListener;
+import com.mapbox.services.android.navigation.ui.v5.listeners.TunnelListener;
 import com.mapbox.services.android.navigation.ui.v5.voice.SpeechAnnouncement;
 import com.mapbox.services.android.navigation.v5.milestone.MilestoneEventListener;
 import com.mapbox.services.android.navigation.v5.navigation.MapboxNavigation;
@@ -36,6 +37,7 @@ class NavigationViewEventDispatcher {
   private InstructionListListener instructionListListener;
   private SpeechAnnouncementListener speechAnnouncementListener;
   private BannerInstructionsListener bannerInstructionsListener;
+  private TunnelListener tunnelListener;
 
   /**
    * Initializes the listeners in the dispatcher, as well as the listeners in the {@link MapboxNavigation}
@@ -52,6 +54,7 @@ class NavigationViewEventDispatcher {
     assignInstructionListListener(navigationViewOptions.instructionListListener());
     assignSpeechAnnouncementListener(navigationViewOptions.speechAnnouncementListener());
     assignBannerInstructionsListener(navigationViewOptions.bannerInstructionsListener());
+    assignTunnelListener(navigationViewOptions.tunnelListener());
   }
 
   void onDestroy(@Nullable MapboxNavigation navigation) {
@@ -181,6 +184,12 @@ class NavigationViewEventDispatcher {
     return instructions;
   }
 
+  void onTunnel(boolean isInTunnel) {
+    if (tunnelListener != null) {
+      tunnelListener.onTunnel(isInTunnel);
+    }
+  }
+
   private void assignProgressChangeListener(NavigationViewOptions navigationViewOptions, MapboxNavigation navigation) {
     this.progressChangeListener = navigationViewOptions.progressChangeListener();
     if (progressChangeListener != null) {
@@ -205,5 +214,9 @@ class NavigationViewEventDispatcher {
     if (progressChangeListener != null) {
       navigation.removeProgressChangeListener(progressChangeListener);
     }
+  }
+
+  private void assignTunnelListener(@Nullable TunnelListener tunnelListener) {
+    this.tunnelListener = tunnelListener;
   }
 }
